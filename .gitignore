@@ -1,0 +1,88 @@
+# Dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+
+# Build outputs
+dist/
+build/
+*.js
+*.d.ts
+*.js.map
+!jest.config.js
+!.eslintrc.js
+
+# CDK outputs
+cdk.out/
+.cdk.staging/
+cdk.context.json
+
+# Terraform
+*.tfstate
+*.tfstate.*
+.terraform/
+.terraform.lock.hcl
+
+# AWS SAM
+.aws-sam/
+samconfig.toml
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+.env.development
+.env.staging
+.env.production
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Testing
+coverage/
+.nyc_output/
+*.lcov
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# AWS credentials (never commit!)
+.aws/
+credentials
+config
+
+# Secrets
+secrets.json
+*.pem
+*.key
+
+# Lambda layers
+layers/
+*.zip
+
+# Playwright
+playwright-report/
+test-results/
+playwright/.cache/
