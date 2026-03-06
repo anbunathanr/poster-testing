@@ -104,15 +104,15 @@
 
 ### 8. Storage Lambda Implementation
 - [x] 8.1 Create Storage Lambda function
-- [ ] 8.2 Implement S3 upload operations
+- [x] 8.2 Implement S3 upload operations
   - [x] 8.2.1 Upload screenshots with tenant-specific prefix
   - [x] 8.2.2 Upload execution logs
   - [x] 8.2.3 Implement retry logic for failed uploads
-- [ ] 8.3 Implement DynamoDB operations
+- [x] 8.3 Implement DynamoDB operations
   - [x] 8.3.1 Create TestResult records
   - [x] 8.3.2 Update test status
   - [x] 8.3.3 Query test results with pagination
-- [ ] 8.4 Implement presigned URL generation
+- [x] 8.4 Implement presigned URL generation
   - [x] 8.4.1 Generate URLs for screenshots
   - [x] 8.4.2 Generate URLs for logs
   - [x] 8.4.3 Set expiration time (1 hour)
@@ -150,7 +150,7 @@
   - [x] 10.3.1 Support date range filtering
   - [x] 10.3.2 Support status filtering
   - [x] 10.3.3 Implement pagination
-- [ ] 10.4 Implement report caching (optional)
+- [x] 10.4* Implement report caching (optional)
 - [x] 10.5 Write unit tests for report generation
 - [x] 10.6 Write integration tests for report endpoints
 
@@ -176,7 +176,7 @@
 
 ### 12. API Gateway Setup
 - [x] 12.1 Configure API Gateway REST API
-- [ ] 12.2 Create resource paths and methods
+- [x] 12.2 Create resource paths and methods
   - [x] 12.2.1 /auth/register (POST)
   - [x] 12.2.2 /auth/login (POST)
   - [x] 12.2.3 /tests/generate (POST)

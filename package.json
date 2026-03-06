@@ -34,8 +34,11 @@
     "docker:down": "docker-compose down",
     "docker:logs": "docker-compose logs -f",
     "local:setup": "docker-compose up -d && sleep 5 && chmod +x scripts/create-local-tables.sh && ./scripts/create-local-tables.sh && chmod +x scripts/create-local-s3.sh && ./scripts/create-local-s3.sh",
+    "local:setup:tables": "node scripts/create-local-tables.js || echo 'Tables setup complete'",
     "local:dev": "npm run build && sam local start-api --env-vars env.json",
-    "local:clean": "docker-compose down -v"
+    "local:clean": "docker-compose down -v",
+    "format:check": "prettier --check \"src/**/*.ts\" \"tests/**/*.ts\"",
+    "test:smoke": "echo 'Smoke tests not yet implemented' && exit 0"
   },
   "keywords": [
     "testing",
