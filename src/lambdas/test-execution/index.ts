@@ -222,7 +222,12 @@ async function executeTest(testId: string, tenantId: string, userId: string) {
     // Task 9.5: Send notification after test execution completes (non-blocking)
     // Use Promise.resolve().then() to ensure notification is sent asynchronously
     // This prevents notification failures from affecting the test result response
-    Promise.resolve().then(() => sendTestNotification(testResult, testId, tenantId));
+    Promise.resolve()
+      .then(() => sendTestNotification(testResult, testId, tenantId))
+      .catch((error) => {
+        console.error('Failed to send test notification:', error);
+        // Don't throw - notification failures should not affect test execution
+      });
 
     // Cleanup
     await screenshotManager.cleanup();
@@ -378,7 +383,12 @@ async function executeTest(testId: string, tenantId: string, userId: string) {
     // Task 9.5: Send notification after test execution completes (non-blocking)
     // Use Promise.resolve().then() to ensure notification is sent asynchronously
     // This prevents notification failures from affecting the test result response
-    Promise.resolve().then(() => sendTestNotification(testResult, testId, tenantId));
+    Promise.resolve()
+      .then(() => sendTestNotification(testResult, testId, tenantId))
+      .catch((error) => {
+        console.error('Failed to send test notification:', error);
+        // Don't throw - notification failures should not affect test execution
+      });
 
     // Cleanup
     if (screenshotManager) {

@@ -86,3 +86,6 @@ layers/
 playwright-report/
 test-results/
 playwright/.cache/
+
+# Duplicate directory
+poster-testing/
