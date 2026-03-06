@@ -41,7 +41,7 @@ export interface CreateTestInput {
 
 /**
  * Creates a new test in the Tests table
- * 
+ *
  * @param input - Test creation data
  * @returns The created test
  * @throws Error if test creation fails or validation fails
@@ -90,13 +90,15 @@ export async function createTest(input: CreateTestInput): Promise<Test> {
     await getDocClient().send(command);
     return test;
   } catch (error) {
-    throw new Error(`Failed to create test: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    throw new Error(
+      `Failed to create test: ${error instanceof Error ? error.message : 'Unknown error'}`
+    );
   }
 }
 
 /**
  * Retrieves a test by testId and tenantId
- * 
+ *
  * @param tenantId - Tenant identifier
  * @param testId - Test identifier
  * @returns The test if found, null otherwise
@@ -121,21 +123,23 @@ export async function getTest(tenantId: string, testId: string): Promise<Test | 
 
   try {
     const response = await getDocClient().send(command);
-    
+
     if (!response.Item) {
       return null;
     }
 
     return response.Item as Test;
   } catch (error) {
-    throw new Error(`Failed to get test: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    throw new Error(
+      `Failed to get test: ${error instanceof Error ? error.message : 'Unknown error'}`
+    );
   }
 }
 
 /**
  * Lists tests for a specific user
  * Uses the userId-createdAt GSI for efficient lookup
- * 
+ *
  * @param userId - User identifier
  * @param limit - Maximum number of tests to return (default: 20)
  * @param lastEvaluatedKey - Pagination token from previous query
@@ -166,19 +170,21 @@ export async function listTestsByUser(
 
   try {
     const response = await getDocClient().send(command);
-    
+
     return {
       tests: (response.Items || []) as Test[],
       lastEvaluatedKey: response.LastEvaluatedKey,
     };
   } catch (error) {
-    throw new Error(`Failed to list tests by user: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    throw new Error(
+      `Failed to list tests by user: ${error instanceof Error ? error.message : 'Unknown error'}`
+    );
   }
 }
 
 /**
  * Updates test status
- * 
+ *
  * @param tenantId - Tenant identifier
  * @param testId - Test identifier
  * @param status - New status
@@ -197,7 +203,7 @@ export async function updateTestStatus(
   if (!testId || testId.trim() === '') {
     throw new Error('Test ID is required');
   }
-  
+
   const validStatuses: Test['status'][] = ['DRAFT', 'READY', 'EXECUTING', 'COMPLETED'];
   if (!validStatuses.includes(status)) {
     throw new Error(`Invalid status. Must be one of: ${validStatuses.join(', ')}`);
@@ -227,13 +233,15 @@ export async function updateTestStatus(
 
   try {
     const response = await getDocClient().send(command);
-    
+
     if (!response.Attributes) {
       throw new Error('Failed to update test status');
     }
 
     return response.Attributes as Test;
   } catch (error) {
-    throw new Error(`Failed to update test status: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    throw new Error(
+      `Failed to update test status: ${error instanceof Error ? error.message : 'Unknown error'}`
+    );
   }
 }

@@ -46,7 +46,7 @@ export interface CreateTestResultInput {
 
 /**
  * Creates a new test result in the TestResults table
- * 
+ *
  * @param input - Test result creation data
  * @returns The created test result
  * @throws Error if test result creation fails or validation fails
@@ -87,19 +87,24 @@ export async function createTestResult(input: CreateTestResultInput): Promise<Te
     await getDocClient().send(command);
     return testResult;
   } catch (error) {
-    throw new Error(`Failed to create test result: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    throw new Error(
+      `Failed to create test result: ${error instanceof Error ? error.message : 'Unknown error'}`
+    );
   }
 }
 
 /**
  * Retrieves a test result by resultId and tenantId
- * 
+ *
  * @param tenantId - Tenant identifier
  * @param resultId - Test result identifier
  * @returns The test result if found, null otherwise
  * @throws Error if query fails
  */
-export async function getTestResult(tenantId: string, resultId: string): Promise<TestResult | null> {
+export async function getTestResult(
+  tenantId: string,
+  resultId: string
+): Promise<TestResult | null> {
   // Validate input
   if (!tenantId || tenantId.trim() === '') {
     throw new Error('Tenant ID is required');
@@ -118,21 +123,23 @@ export async function getTestResult(tenantId: string, resultId: string): Promise
 
   try {
     const response = await getDocClient().send(command);
-    
+
     if (!response.Item) {
       return null;
     }
 
     return response.Item as TestResult;
   } catch (error) {
-    throw new Error(`Failed to get test result: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    throw new Error(
+      `Failed to get test result: ${error instanceof Error ? error.message : 'Unknown error'}`
+    );
   }
 }
 
 /**
  * Lists test results for a specific test
  * Uses the testId-startTime GSI for efficient lookup
- * 
+ *
  * @param testId - Test identifier
  * @param limit - Maximum number of results to return (default: 20)
  * @param lastEvaluatedKey - Pagination token from previous query
@@ -163,13 +170,15 @@ export async function listTestResultsByTest(
 
   try {
     const response = await getDocClient().send(command);
-    
+
     return {
       results: (response.Items || []) as TestResult[],
       lastEvaluatedKey: response.LastEvaluatedKey,
     };
   } catch (error) {
-    throw new Error(`Failed to list test results: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    throw new Error(
+      `Failed to list test results: ${error instanceof Error ? error.message : 'Unknown error'}`
+    );
   }
 }
 
@@ -192,7 +201,7 @@ export interface UpdateTestResultInput {
  * Updates an existing test result in the TestResults table
  * Supports updating status from EXECUTING to PASS/FAIL and updating metadata
  * Ensures tenant isolation by validating tenantId
- * 
+ *
  * @param input - Test result update data
  * @returns The updated test result
  * @throws Error if test result not found, validation fails, or update fails
@@ -208,7 +217,7 @@ export async function updateTestResult(input: UpdateTestResultInput): Promise<Te
 
   // First, retrieve the existing test result to ensure it exists and belongs to the tenant
   const existingResult = await getTestResult(input.tenantId, input.resultId);
-  
+
   if (!existingResult) {
     throw new Error('Test result not found');
   }
@@ -279,14 +288,16 @@ export async function updateTestResult(input: UpdateTestResultInput): Promise<Te
 
   try {
     const response = await getDocClient().send(command);
-    
+
     if (!response.Attributes) {
       throw new Error('Update failed: No attributes returned');
     }
 
     return response.Attributes as TestResult;
   } catch (error) {
-    throw new Error(`Failed to update test result: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    throw new Error(
+      `Failed to update test result: ${error instanceof Error ? error.message : 'Unknown error'}`
+    );
   }
 }
 /**
@@ -364,6 +375,8 @@ export async function queryTestResults(
       lastEvaluatedKey: response.LastEvaluatedKey,
     };
   } catch (error) {
-    throw new Error(`Failed to query test results: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    throw new Error(
+      `Failed to query test results: ${error instanceof Error ? error.message : 'Unknown error'}`
+    );
   }
 }

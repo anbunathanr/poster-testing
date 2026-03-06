@@ -62,7 +62,7 @@ export interface ExecutionLoggerOptions {
 
 /**
  * Execution Logger for test execution in AWS Lambda
- * 
+ *
  * Provides structured logging for test execution events with:
  * - JSON format for easy parsing
  * - Timestamps for all events
@@ -85,11 +85,7 @@ export class ExecutionLogger {
   private startTime: Date;
   private isClosed: boolean = false;
 
-  constructor(
-    testId: string,
-    resultId: string,
-    options: ExecutionLoggerOptions = {}
-  ) {
+  constructor(testId: string, resultId: string, options: ExecutionLoggerOptions = {}) {
     this.testId = testId;
     this.resultId = resultId;
     this.tmpDir = options.tmpDir || '/tmp';
@@ -120,7 +116,7 @@ export class ExecutionLogger {
     try {
       const logDir = join(this.tmpDir, 'logs');
       await fs.mkdir(logDir, { recursive: true });
-      
+
       // Log initialization
       this.log(LogLevel.INFO, 'Execution logger initialized', {
         testId: this.testId,
@@ -146,11 +142,7 @@ export class ExecutionLogger {
   /**
    * Log a message with specified level
    */
-  log(
-    level: LogLevel,
-    message: string,
-    metadata?: Record<string, any>
-  ): void {
+  log(level: LogLevel, message: string, metadata?: Record<string, any>): void {
     if (this.isClosed) {
       console.warn('Attempted to log to closed logger');
       return;
@@ -299,7 +291,7 @@ export class ExecutionLogger {
    */
   private checkLogSize(): void {
     const estimatedSize = JSON.stringify(this.getExecutionLog()).length;
-    
+
     if (estimatedSize > this.maxLogSize * 0.9) {
       // Approaching max size, flush to disk
       this.flush().catch((error) => {
@@ -319,7 +311,7 @@ export class ExecutionLogger {
     try {
       const log = this.getExecutionLog();
       const logJson = JSON.stringify(log, null, 2);
-      
+
       await fs.writeFile(this.logFilePath, logJson, 'utf-8');
     } catch (error) {
       // Graceful degradation - log to console

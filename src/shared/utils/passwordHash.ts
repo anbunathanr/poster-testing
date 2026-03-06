@@ -22,7 +22,9 @@ export async function hashPassword(password: string): Promise<string> {
     const hash = await bcrypt.hash(password, SALT_ROUNDS);
     return hash;
   } catch (error) {
-    throw new Error(`Failed to hash password: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    throw new Error(
+      `Failed to hash password: ${error instanceof Error ? error.message : 'Unknown error'}`
+    );
   }
 }
 
@@ -46,6 +48,8 @@ export async function verifyPassword(password: string, hash: string): Promise<bo
     const isMatch = await bcrypt.compare(password, hash);
     return isMatch;
   } catch (error) {
-    throw new Error(`Failed to verify password: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    throw new Error(
+      `Failed to verify password: ${error instanceof Error ? error.message : 'Unknown error'}`
+    );
   }
 }

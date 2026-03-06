@@ -18,7 +18,7 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
     if (path === '/auth/register' && method === 'POST') {
       return await handleRegister(event);
     }
-    
+
     if (path === '/auth/login' && method === 'POST') {
       return await handleLogin(event);
     }
@@ -268,7 +268,7 @@ async function handleLogin(event: APIGatewayProxyEvent): Promise<APIGatewayProxy
     // We'll use a workaround by trying common tenant patterns or requiring tenantId in the request
     // For now, we'll require tenantId in the login request (as per the design, JWT contains tenantId)
     // Alternative: Add a GSI on email only, but this could expose cross-tenant data
-    
+
     // Extract tenantId from request body (required for multi-tenant isolation)
     const tenantId = (requestBody as any).tenantId;
     if (!tenantId || typeof tenantId !== 'string' || tenantId.trim() === '') {

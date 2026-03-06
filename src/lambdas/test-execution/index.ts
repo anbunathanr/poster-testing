@@ -1,9 +1,9 @@
 /**
  * Test Execution Lambda
- * 
+ *
  * Executes Playwright tests based on test scripts stored in DynamoDB.
  * Handles test step execution, screenshot capture, logging, and result storage.
- * 
+ *
  * POST /tests/{testId}/execute
  */
 
@@ -14,11 +14,19 @@ import { getTest, updateTestStatus } from '../../shared/database/testOperations'
 import { getEnvironmentConfig } from '../../shared/database/environmentOperations';
 import { createTestResult } from '../../shared/database/testResultOperations';
 import { PlaywrightBrowserManager } from '../../shared/utils/playwrightConfig';
-import { createScreenshotManager, ScreenshotCaptureManager } from '../../shared/utils/screenshotCapture';
+import {
+  createScreenshotManager,
+  ScreenshotCaptureManager,
+} from '../../shared/utils/screenshotCapture';
 import { createExecutionLogger, LogLevel } from '../../shared/utils/executionLogger';
 import { uploadScreenshotsToS3, uploadLogToS3 } from '../../shared/utils/s3Upload';
 import { formatTestNotification, formatSNSMessage } from '../../shared/utils/notificationFormatter';
-import { emitTestExecutionDuration, emitTestSuccessRate, emitTestFailureRate, emitAPILatency } from '../../shared/utils/cloudwatchMetrics';
+import {
+  emitTestExecutionDuration,
+  emitTestSuccessRate,
+  emitTestFailureRate,
+  emitAPILatency,
+} from '../../shared/utils/cloudwatchMetrics';
 import type { Page } from 'playwright-core';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -84,7 +92,7 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
     };
 
     console.error('Test execution failed:', JSON.stringify(errorDetails, null, 2));
-    
+
     return {
       statusCode: 500,
       body: JSON.stringify({
@@ -134,7 +142,7 @@ async function executeTest(testId: string, tenantId: string, userId: string) {
     // Task 7.2.1: Retrieve test script from DynamoDB
     logger.log(LogLevel.INFO, 'Retrieving test script from DynamoDB');
     const test = await getTest(tenantId, testId);
-    
+
     if (!test) {
       throw new Error('Test not found');
     }
@@ -152,7 +160,7 @@ async function executeTest(testId: string, tenantId: string, userId: string) {
     // Task 7.2.2: Retrieve environment configuration
     logger.log(LogLevel.INFO, 'Retrieving environment configuration');
     const envConfig = await getEnvironmentConfig(tenantId, test.environment);
-    
+
     if (!envConfig) {
       throw new Error(`Environment configuration not found for ${test.environment}`);
     }
@@ -174,12 +182,7 @@ async function executeTest(testId: string, tenantId: string, userId: string) {
     logger.log(LogLevel.INFO, 'Screenshot manager initialized');
 
     // Task 7.3: Execute test steps
-    await executeTestSteps(
-      page,
-      test.testScript.steps,
-      screenshotManager,
-      logger
-    );
+    await executeTestSteps(page, test.testScript.steps, screenshotManager, logger);
 
     // Test passed
     const endTime = Date.now();
@@ -190,7 +193,7 @@ async function executeTest(testId: string, tenantId: string, userId: string) {
     // Upload evidence to S3
     const screenshotPaths = screenshotManager.getScreenshotPaths();
     const screenshotsS3Keys = await uploadScreenshotsToS3(screenshotPaths, tenantId, resultId);
-    
+
     await logger.close();
     const logsS3Key = await uploadLogToS3(logger.getLogFilePath(), tenantId, resultId);
 
@@ -232,7 +235,6 @@ async function executeTest(testId: string, tenantId: string, userId: string) {
       duration,
       message: 'Test execution completed successfully',
     };
-
   } catch (error) {
     // Task 7.4: Test failed - comprehensive error handling
     const endTime = Date.now();
@@ -272,23 +274,22 @@ async function executeTest(testId: string, tenantId: string, userId: string) {
             // Try to get the page title to verify browser is responsive
             await Promise.race([
               page.title(),
-              new Promise((_, reject) => 
+              new Promise((_, reject) =>
                 setTimeout(() => reject(new Error('Browser unresponsive')), 2000)
-              )
+              ),
             ]);
-            
+
             // Browser is responsive, capture screenshot
-            await screenshotManager.captureFailureScreenshot(
-              page,
-              0,
-              'execution_failure'
-            );
+            await screenshotManager.captureFailureScreenshot(page, 0, 'execution_failure');
             logger.log(LogLevel.INFO, 'Failure screenshot captured successfully');
           } catch (responsiveError) {
             // Browser is unresponsive or crashed
-            logger.logWarning('Cannot capture failure screenshot: browser is unresponsive or crashed', {
-              error: responsiveError instanceof Error ? responsiveError.message : 'Unknown error',
-            });
+            logger.logWarning(
+              'Cannot capture failure screenshot: browser is unresponsive or crashed',
+              {
+                error: responsiveError instanceof Error ? responsiveError.message : 'Unknown error',
+              }
+            );
           }
         } else {
           logger.logWarning('Cannot capture failure screenshot: browser page is closed or crashed');
@@ -299,22 +300,28 @@ async function executeTest(testId: string, tenantId: string, userId: string) {
         const screenshotErrorDetails = {
           testId,
           resultId,
-          errorMessage: screenshotError instanceof Error ? screenshotError.message : 'Unknown error',
+          errorMessage:
+            screenshotError instanceof Error ? screenshotError.message : 'Unknown error',
           errorStack: screenshotError instanceof Error ? screenshotError.stack : undefined,
           errorName: screenshotError instanceof Error ? screenshotError.name : 'Error',
           context: 'failure_screenshot_capture',
           timestamp: new Date().toISOString(),
         };
 
-        console.error('Failed to capture failure screenshot:', JSON.stringify(screenshotErrorDetails, null, 2));
-        
+        console.error(
+          'Failed to capture failure screenshot:',
+          JSON.stringify(screenshotErrorDetails, null, 2)
+        );
+
         logger.logWarning('Failed to capture failure screenshot', {
           error: screenshotError instanceof Error ? screenshotError.message : 'Unknown error',
           stack: screenshotError instanceof Error ? screenshotError.stack : undefined,
         });
       }
     } else {
-      logger.logWarning('Cannot capture failure screenshot: browser or screenshot manager not initialized');
+      logger.logWarning(
+        'Cannot capture failure screenshot: browser or screenshot manager not initialized'
+      );
     }
 
     // Upload evidence to S3
@@ -387,7 +394,6 @@ async function executeTest(testId: string, tenantId: string, userId: string) {
       errorMessage,
       message: 'Test execution failed',
     };
-
   } finally {
     // Task 7.4.3: Cleanup browser resources gracefully, even after crashes
     if (browserManager) {
@@ -395,9 +401,9 @@ async function executeTest(testId: string, tenantId: string, userId: string) {
         // Add timeout to cleanup to prevent hanging
         await Promise.race([
           browserManager.cleanup(),
-          new Promise((_, reject) => 
+          new Promise((_, reject) =>
             setTimeout(() => reject(new Error('Browser cleanup timeout')), 10000)
-          )
+          ),
         ]);
         logger.log(LogLevel.INFO, 'Browser resources cleaned up successfully');
       } catch (cleanupError) {
@@ -413,12 +419,12 @@ async function executeTest(testId: string, tenantId: string, userId: string) {
         };
 
         console.error('Browser cleanup error:', JSON.stringify(cleanupErrorDetails, null, 2));
-        
+
         logger.logWarning('Browser cleanup encountered errors', {
           error: cleanupError instanceof Error ? cleanupError.message : 'Unknown error',
           stack: cleanupError instanceof Error ? cleanupError.stack : undefined,
         });
-        
+
         // Task 7.4.3: Force cleanup if normal cleanup fails
         // This ensures resources are released even if browser crashed
         try {
@@ -427,7 +433,7 @@ async function executeTest(testId: string, tenantId: string, userId: string) {
             // Try to force close the browser process
             await Promise.race([
               browser.close(),
-              new Promise((resolve) => setTimeout(resolve, 3000))
+              new Promise((resolve) => setTimeout(resolve, 3000)),
             ]);
           }
         } catch (forceCleanupError) {
@@ -445,7 +451,7 @@ async function executeTest(testId: string, tenantId: string, userId: string) {
  * Publishes notification to SNS after test execution completes
  * Handles both PASS and FAIL test results
  * Ensures notifications are sent asynchronously (non-blocking)
- * 
+ *
  * @param testResult - The test result object
  * @param testId - The test ID
  * @param tenantId - The tenant ID
@@ -506,7 +512,6 @@ async function sendTestNotification(
       status: testResult.status,
       subject: notification.subject,
     });
-
   } catch (error) {
     // Task 9.5: Add proper error handling for notification failures
     // Log error but don't fail the test execution
@@ -592,11 +597,10 @@ async function executeTestSteps(
 
       const stepDuration = Date.now() - stepStartTime;
       logger.logStepComplete(stepNumber, step.action, stepDuration);
-
     } catch (error) {
       // Task 7.4.3: Detect browser crashes from error messages
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      const isBrowserCrash = 
+      const isBrowserCrash =
         errorMessage.includes('Target closed') ||
         errorMessage.includes('Browser closed') ||
         errorMessage.includes('Session closed') ||
@@ -624,7 +628,7 @@ async function executeTestSteps(
           error: screenshotError instanceof Error ? screenshotError.message : 'Unknown error',
         });
       }
-      
+
       // Task 7.4.2: Log error with full context to CloudWatch
       const stepErrorDetails = {
         stepNumber,
@@ -638,7 +642,7 @@ async function executeTestSteps(
       };
 
       console.error('Step execution error:', JSON.stringify(stepErrorDetails, null, 2));
-      
+
       logger.logStepFailure(stepNumber, step.action, error as Error);
       throw error;
     }
@@ -667,7 +671,9 @@ async function handleNavigate(
 
     logger.logDebug(`Navigation successful: ${step.url}`);
   } catch (error) {
-    throw new Error(`Navigation failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    throw new Error(
+      `Navigation failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+    );
   }
 }
 
@@ -695,7 +701,9 @@ async function handleFill(
 
     logger.logDebug(`Fill successful: ${step.selector}`);
   } catch (error) {
-    throw new Error(`Fill failed for selector "${step.selector}": ${error instanceof Error ? error.message : 'Unknown error'}`);
+    throw new Error(
+      `Fill failed for selector "${step.selector}": ${error instanceof Error ? error.message : 'Unknown error'}`
+    );
   }
 }
 
@@ -720,7 +728,9 @@ async function handleClick(
 
     logger.logDebug(`Click successful: ${step.selector}`);
   } catch (error) {
-    throw new Error(`Click failed for selector "${step.selector}": ${error instanceof Error ? error.message : 'Unknown error'}`);
+    throw new Error(
+      `Click failed for selector "${step.selector}": ${error instanceof Error ? error.message : 'Unknown error'}`
+    );
   }
 }
 
@@ -774,7 +784,9 @@ async function handleAssert(
 
     logger.logDebug(`Assertion successful: ${step.selector} is ${step.condition}`);
   } catch (error) {
-    throw new Error(`Assertion failed for selector "${step.selector}": ${error instanceof Error ? error.message : 'Unknown error'}`);
+    throw new Error(
+      `Assertion failed for selector "${step.selector}": ${error instanceof Error ? error.message : 'Unknown error'}`
+    );
   }
 }
 
@@ -795,6 +807,8 @@ async function handleWaitForNavigation(
 
     logger.logDebug('Navigation wait successful');
   } catch (error) {
-    throw new Error(`Wait for navigation failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    throw new Error(
+      `Wait for navigation failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+    );
   }
 }

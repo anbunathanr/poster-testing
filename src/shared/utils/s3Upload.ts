@@ -26,7 +26,7 @@ const INITIAL_RETRY_DELAY_MS = 1000; // 1 second
  * @param ms - Milliseconds to sleep
  */
 function sleep(ms: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms));
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 /**
@@ -45,7 +45,7 @@ function calculateBackoffDelay(attempt: number): number {
  */
 function isTransientError(error: any): boolean {
   if (!error) return false;
-  
+
   // Check for common transient error codes
   const transientErrorCodes = [
     'RequestTimeout',
@@ -60,14 +60,14 @@ function isTransientError(error: any): boolean {
     'ECONNRESET',
     'ETIMEDOUT',
     'ENOTFOUND',
-    'ENETUNREACH'
+    'ENETUNREACH',
   ];
-  
+
   const errorCode = error.code || error.name || '';
   const errorMessage = error.message || '';
-  
-  return transientErrorCodes.some(code => 
-    errorCode.includes(code) || errorMessage.includes(code)
+
+  return transientErrorCodes.some(
+    (code) => errorCode.includes(code) || errorMessage.includes(code)
   );
 }
 
@@ -78,48 +78,45 @@ function isTransientError(error: any): boolean {
  * @returns Promise that resolves when upload succeeds
  * @throws Error if all retry attempts fail
  */
-async function executeWithRetry(
-  command: PutObjectCommand,
-  s3Key: string
-): Promise<void> {
+async function executeWithRetry(command: PutObjectCommand, s3Key: string): Promise<void> {
   let lastError: Error | null = null;
-  
+
   for (let attempt = 0; attempt < MAX_RETRY_ATTEMPTS; attempt++) {
     try {
       await getS3Client().send(command);
-      
+
       if (attempt > 0) {
         console.log(`S3 upload succeeded on attempt ${attempt + 1} for: ${s3Key}`);
       }
-      
+
       return; // Success
     } catch (error) {
       lastError = error instanceof Error ? error : new Error(String(error));
-      
+
       // Check if this is the last attempt
       if (attempt === MAX_RETRY_ATTEMPTS - 1) {
         console.error(`S3 upload failed after ${MAX_RETRY_ATTEMPTS} attempts for: ${s3Key}`);
         break;
       }
-      
+
       // Check if error is transient and should be retried
       if (!isTransientError(error)) {
         console.error(`S3 upload failed with non-transient error for: ${s3Key}`, error);
         throw lastError;
       }
-      
+
       // Calculate backoff delay and log retry attempt
       const delayMs = calculateBackoffDelay(attempt);
       console.log(
         `S3 upload attempt ${attempt + 1} failed for: ${s3Key}. ` +
-        `Retrying in ${delayMs}ms... Error: ${lastError.message}`
+          `Retrying in ${delayMs}ms... Error: ${lastError.message}`
       );
-      
+
       // Wait before retrying
       await sleep(delayMs);
     }
   }
-  
+
   // All retries exhausted
   throw new Error(
     `S3 upload failed after ${MAX_RETRY_ATTEMPTS} attempts: ${lastError?.message || 'Unknown error'}`
@@ -128,7 +125,7 @@ async function executeWithRetry(
 
 /**
  * Upload a file to S3
- * 
+ *
  * @param filePath - Local file path
  * @param s3Key - S3 object key
  * @param contentType - Content type (optional)
@@ -153,7 +150,7 @@ export async function uploadFileToS3(
     });
 
     await executeWithRetry(command, s3Key);
-    
+
     console.log(`File uploaded to S3: ${s3Key}`);
     return s3Key;
   } catch (error) {
@@ -165,7 +162,7 @@ export async function uploadFileToS3(
 
 /**
  * Upload screenshots to S3
- * 
+ *
  * @param screenshotPaths - Array of local screenshot file paths
  * @param tenantId - Tenant identifier
  * @param resultId - Test result identifier
@@ -182,7 +179,7 @@ export async function uploadScreenshotsToS3(
   for (const screenshotPath of screenshotPaths) {
     const fileName = path.basename(screenshotPath);
     const s3Key = `${tenantId}/screenshots/${resultId}/${fileName}`;
-    
+
     await uploadFileToS3(screenshotPath, s3Key, 'image/png');
     s3Keys.push(s3Key);
   }
@@ -193,7 +190,7 @@ export async function uploadScreenshotsToS3(
 
 /**
  * Upload execution log to S3
- * 
+ *
  * @param logFilePath - Local log file path
  * @param tenantId - Tenant identifier
  * @param resultId - Test result identifier
@@ -207,16 +204,16 @@ export async function uploadLogToS3(
 ): Promise<string> {
   const fileName = path.basename(logFilePath);
   const s3Key = `${tenantId}/logs/${resultId}/${fileName}`;
-  
+
   await uploadFileToS3(logFilePath, s3Key, 'application/json');
-  
+
   console.log(`Uploaded execution log to S3: ${s3Key}`);
   return s3Key;
 }
 
 /**
  * Upload buffer content to S3 (for in-memory content)
- * 
+ *
  * @param content - Content to upload (string or buffer)
  * @param s3Key - S3 object key
  * @param contentType - Content type
@@ -237,7 +234,7 @@ export async function uploadContentToS3(
     });
 
     await executeWithRetry(command, s3Key);
-    
+
     console.log(`Content uploaded to S3: ${s3Key}`);
     return s3Key;
   } catch (error) {

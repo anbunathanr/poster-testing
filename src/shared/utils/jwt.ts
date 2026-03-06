@@ -68,7 +68,9 @@ export function generateToken(payload: JWTPayload, secret: string): string {
 
     return token;
   } catch (error) {
-    throw new Error(`Failed to generate token: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    throw new Error(
+      `Failed to generate token: ${error instanceof Error ? error.message : 'Unknown error'}`
+    );
   }
 }
 

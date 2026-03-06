@@ -4,11 +4,7 @@
  */
 
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
-import {
-  DynamoDBDocumentClient,
-  PutCommand,
-  GetCommand,
-} from '@aws-sdk/lib-dynamodb';
+import { DynamoDBDocumentClient, PutCommand, GetCommand } from '@aws-sdk/lib-dynamodb';
 import { EnvironmentConfig, Environment } from '../types';
 
 // Initialize DynamoDB client lazily
@@ -26,7 +22,7 @@ const ENVIRONMENTS_TABLE = process.env.ENVIRONMENTS_TABLE || 'Environments';
 
 /**
  * Retrieves environment configuration for a tenant
- * 
+ *
  * @param tenantId - Tenant identifier
  * @param environment - Environment name (DEV, STAGING, PROD)
  * @returns The environment configuration if found, null otherwise
@@ -54,14 +50,16 @@ export async function getEnvironmentConfig(
 
   try {
     const response = await getDocClient().send(command);
-    
+
     if (!response.Item) {
       return null;
     }
 
     return response.Item as EnvironmentConfig;
   } catch (error) {
-    throw new Error(`Failed to get environment config: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    throw new Error(
+      `Failed to get environment config: ${error instanceof Error ? error.message : 'Unknown error'}`
+    );
   }
 }
 
@@ -78,7 +76,7 @@ export interface CreateEnvironmentConfigInput {
 
 /**
  * Creates or updates environment configuration
- * 
+ *
  * @param input - Environment configuration data
  * @returns The created/updated environment configuration
  * @throws Error if operation fails or validation fails
@@ -98,10 +96,10 @@ export async function createOrUpdateEnvironmentConfig(
   }
 
   const now = Date.now();
-  
+
   // Check if config already exists to preserve createdAt
   const existingConfig = await getEnvironmentConfig(input.tenantId, input.environment);
-  
+
   const config: EnvironmentConfig = {
     tenantId: input.tenantId,
     environment: input.environment,
@@ -121,13 +119,15 @@ export async function createOrUpdateEnvironmentConfig(
     await getDocClient().send(command);
     return config;
   } catch (error) {
-    throw new Error(`Failed to create/update environment config: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    throw new Error(
+      `Failed to create/update environment config: ${error instanceof Error ? error.message : 'Unknown error'}`
+    );
   }
 }
 
 /**
  * Updates environment configuration
- * 
+ *
  * @param input - Environment configuration data to update
  * @returns The updated environment configuration
  * @throws Error if environment not found or operation fails
@@ -145,7 +145,7 @@ export async function updateEnvironmentConfig(
 
   // Check if config exists
   const existingConfig = await getEnvironmentConfig(input.tenantId, input.environment);
-  
+
   if (!existingConfig) {
     throw new Error('Environment configuration not found');
   }
@@ -156,7 +156,7 @@ export async function updateEnvironmentConfig(
 
 /**
  * Deletes environment configuration
- * 
+ *
  * @param tenantId - Tenant identifier
  * @param environment - Environment name (DEV, STAGING, PROD)
  * @throws Error if operation fails
@@ -174,7 +174,7 @@ export async function deleteEnvironmentConfig(
   }
 
   const { DeleteCommand } = await import('@aws-sdk/lib-dynamodb');
-  
+
   const command = new DeleteCommand({
     TableName: ENVIRONMENTS_TABLE,
     Key: {
@@ -186,13 +186,15 @@ export async function deleteEnvironmentConfig(
   try {
     await getDocClient().send(command);
   } catch (error) {
-    throw new Error(`Failed to delete environment config: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    throw new Error(
+      `Failed to delete environment config: ${error instanceof Error ? error.message : 'Unknown error'}`
+    );
   }
 }
 
 /**
  * Lists all environment configurations for a tenant
- * 
+ *
  * @param tenantId - Tenant identifier
  * @returns Array of environment configurations
  * @throws Error if query fails
@@ -204,7 +206,7 @@ export async function listEnvironmentConfigs(tenantId: string): Promise<Environm
   }
 
   const { QueryCommand } = await import('@aws-sdk/lib-dynamodb');
-  
+
   const command = new QueryCommand({
     TableName: ENVIRONMENTS_TABLE,
     KeyConditionExpression: 'tenantId = :tenantId',
@@ -217,6 +219,8 @@ export async function listEnvironmentConfigs(tenantId: string): Promise<Environm
     const response = await getDocClient().send(command);
     return (response.Items || []) as EnvironmentConfig[];
   } catch (error) {
-    throw new Error(`Failed to list environment configs: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    throw new Error(
+      `Failed to list environment configs: ${error instanceof Error ? error.message : 'Unknown error'}`
+    );
   }
 }

@@ -1,8 +1,8 @@
 // API Gateway Lambda Authorizer - JWT token validation
-import { 
-  APIGatewayAuthorizerResult, 
+import {
+  APIGatewayAuthorizerResult,
   APIGatewayTokenAuthorizerEvent,
-  APIGatewayAuthorizerResultContext 
+  APIGatewayAuthorizerResultContext,
 } from 'aws-lambda';
 import { validateToken, DecodedToken } from '../../shared/utils/jwt';
 import { getJwtSecret } from '../../shared/config';
@@ -20,7 +20,7 @@ interface AuthorizerContext extends APIGatewayAuthorizerResultContext {
 /**
  * Main handler for API Gateway Lambda Authorizer
  * Validates JWT tokens from the Authorization header
- * 
+ *
  * @param event - API Gateway Token Authorizer event containing the authorization token
  * @returns IAM policy document allowing or denying access
  */
@@ -34,22 +34,20 @@ export const handler = async (
     const decodedToken = extractAndValidateToken(event.authorizationToken);
 
     // Generate IAM policy allowing access
-    const policy = generatePolicy(
-      decodedToken.userId,
-      'Allow',
-      event.methodArn,
-      {
-        userId: decodedToken.userId,
-        tenantId: decodedToken.tenantId,
-        email: decodedToken.email,
-      }
-    );
+    const policy = generatePolicy(decodedToken.userId, 'Allow', event.methodArn, {
+      userId: decodedToken.userId,
+      tenantId: decodedToken.tenantId,
+      email: decodedToken.email,
+    });
 
     console.log('Authorization successful for user:', decodedToken.userId);
     return policy;
   } catch (error) {
-    console.error('Authorization failed:', error instanceof Error ? error.message : 'Unknown error');
-    
+    console.error(
+      'Authorization failed:',
+      error instanceof Error ? error.message : 'Unknown error'
+    );
+
     // For security reasons, we throw 'Unauthorized' instead of returning a Deny policy
     // This prevents potential information leakage about why the token was invalid
     throw new Error('Unauthorized');
@@ -58,7 +56,7 @@ export const handler = async (
 
 /**
  * Extract JWT token from Authorization header and validate it
- * 
+ *
  * @param authorizationToken - Authorization header value (format: "Bearer <token>")
  * @returns Decoded token payload
  * @throws Error if token is missing, malformed, or invalid
@@ -71,7 +69,7 @@ export function extractAndValidateToken(authorizationToken: string): DecodedToke
 
   // Extract token from "Bearer <token>" format
   const tokenParts = authorizationToken.split(' ');
-  
+
   if (tokenParts.length !== 2) {
     throw new Error('Authorization header format must be: Bearer <token>');
   }
@@ -99,7 +97,7 @@ export function extractAndValidateToken(authorizationToken: string): DecodedToke
 
 /**
  * Generate IAM policy document for API Gateway
- * 
+ *
  * @param principalId - User identifier (userId)
  * @param effect - 'Allow' or 'Deny'
  * @param resource - API Gateway method ARN

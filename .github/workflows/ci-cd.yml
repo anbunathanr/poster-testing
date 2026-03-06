@@ -20,26 +20,26 @@ jobs:
   lint:
     name: Lint and Code Quality
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
-      
+
       - name: Install dependencies
         run: npm ci
-      
+
       - name: Run ESLint
         run: npm run lint || echo "Linting completed with warnings"
-      
+
       - name: Run Prettier check
         run: npm run format:check || echo "Format check completed with warnings"
-      
+
       - name: TypeScript compilation check
         run: npm run build
 
@@ -48,30 +48,30 @@ jobs:
     name: Unit Tests
     runs-on: ubuntu-latest
     needs: lint
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
-      
+
       - name: Install dependencies
         run: npm ci
-      
+
       - name: Run unit tests
         run: npm run test:unit -- --coverage
-      
+
       - name: Upload coverage reports
         uses: codecov/codecov-action@v3
         with:
           files: ./coverage/lcov.info
           flags: unittests
           name: codecov-umbrella
-      
+
       - name: Archive test results
         if: always()
         uses: actions/upload-artifact@v3
@@ -84,7 +84,7 @@ jobs:
     name: Integration Tests
     runs-on: ubuntu-latest
     needs: lint
-    
+
     services:
       localstack:
         image: localstack/localstack:latest
@@ -93,24 +93,24 @@ jobs:
           DEBUG: 1
         ports:
           - 4566:4566
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
-      
+
       - name: Install dependencies
         run: npm ci
-      
+
       - name: Wait for LocalStack
         run: |
           timeout 60 bash -c 'until curl -s http://localhost:4566/_localstack/health | grep -q "\"dynamodb\": \"available\""; do sleep 2; done'
-      
+
       - name: Setup local DynamoDB tables
         run: npm run local:setup:tables
         env:
@@ -118,7 +118,7 @@ jobs:
           AWS_REGION: us-east-1
           AWS_ACCESS_KEY_ID: test
           AWS_SECRET_ACCESS_KEY: test
-      
+
       - name: Run integration tests
         run: npm run test:integration
         env:
@@ -126,7 +126,7 @@ jobs:
           AWS_REGION: us-east-1
           AWS_ACCESS_KEY_ID: test
           AWS_SECRET_ACCESS_KEY: test
-      
+
       - name: Archive test results
         if: always()
         uses: actions/upload-artifact@v3
@@ -139,7 +139,7 @@ jobs:
     name: End-to-End Tests
     runs-on: ubuntu-latest
     needs: lint
-    
+
     services:
       localstack:
         image: localstack/localstack:latest
@@ -148,27 +148,27 @@ jobs:
           DEBUG: 1
         ports:
           - 4566:4566
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
-      
+
       - name: Install dependencies
         run: npm ci
-      
+
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
-      
+
       - name: Wait for LocalStack
         run: |
           timeout 60 bash -c 'until curl -s http://localhost:4566/_localstack/health | grep -q "\"dynamodb\": \"available\""; do sleep 2; done'
-      
+
       - name: Setup local environment
         run: npm run local:setup:tables
         env:
@@ -176,7 +176,7 @@ jobs:
           AWS_REGION: us-east-1
           AWS_ACCESS_KEY_ID: test
           AWS_SECRET_ACCESS_KEY: test
-      
+
       - name: Run E2E tests
         run: npm run test:e2e
         env:
@@ -184,7 +184,7 @@ jobs:
           AWS_REGION: us-east-1
           AWS_ACCESS_KEY_ID: test
           AWS_SECRET_ACCESS_KEY: test
-      
+
       - name: Archive test results
         if: always()
         uses: actions/upload-artifact@v3
@@ -197,24 +197,24 @@ jobs:
     name: Security Scan
     runs-on: ubuntu-latest
     needs: lint
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
-      
+
       - name: Install dependencies
         run: npm ci
-      
+
       - name: Run npm audit
         run: npm audit --audit-level=moderate
         continue-on-error: true
-      
+
       - name: Run Snyk security scan
         uses: snyk/actions/node@master
         continue-on-error: true
@@ -228,23 +228,23 @@ jobs:
     name: Build Application
     runs-on: ubuntu-latest
     needs: [unit-tests, integration-tests]
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
-      
+
       - name: Install dependencies
         run: npm ci
-      
+
       - name: Build application
         run: npm run build
-      
+
       - name: Archive build artifacts
         uses: actions/upload-artifact@v3
         with:
@@ -264,29 +264,29 @@ jobs:
     environment:
       name: development
       url: https://dev-api.your-domain.com
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
-      
+
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_DEV }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_DEV }}
           aws-region: ${{ env.AWS_REGION }}
-      
+
       - name: Install dependencies
         run: |
           npm ci
           cd infrastructure && npm ci
-      
+
       - name: Deploy to Dev
         run: |
           cd infrastructure
@@ -294,14 +294,14 @@ jobs:
         env:
           ENVIRONMENT: dev
           JWT_SECRET: ${{ secrets.JWT_SECRET_DEV }}
-      
+
       - name: Run smoke tests
         run: npm run test:smoke || echo "Smoke tests not yet implemented"
         env:
           API_URL: https://dev-api.your-domain.com
           TEST_USER_EMAIL: ${{ secrets.TEST_USER_EMAIL_DEV }}
           TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD_DEV }}
-      
+
       - name: Notify deployment
         if: always()
         uses: 8398a7/action-slack@v3
@@ -319,29 +319,29 @@ jobs:
     environment:
       name: staging
       url: https://staging-api.your-domain.com
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
-      
+
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_STAGING }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_STAGING }}
           aws-region: ${{ env.AWS_REGION }}
-      
+
       - name: Install dependencies
         run: |
           npm ci
           cd infrastructure && npm ci
-      
+
       - name: Deploy to Staging
         run: |
           cd infrastructure
@@ -349,19 +349,19 @@ jobs:
         env:
           ENVIRONMENT: staging
           JWT_SECRET: ${{ secrets.JWT_SECRET_STAGING }}
-      
+
       - name: Run integration tests in Staging
         run: npm run test:integration
         env:
           API_URL: https://staging-api.your-domain.com
           TEST_USER_EMAIL: ${{ secrets.TEST_USER_EMAIL_STAGING }}
           TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD_STAGING }}
-      
+
       - name: Run smoke tests
         run: npm run test:smoke || echo "Smoke tests not yet implemented"
         env:
           API_URL: https://staging-api.your-domain.com
-      
+
       - name: Notify deployment
         if: always()
         uses: 8398a7/action-slack@v3
@@ -379,34 +379,34 @@ jobs:
     environment:
       name: production
       url: https://api.your-domain.com
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
-      
+
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_PROD }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_PROD }}
           aws-region: ${{ env.AWS_REGION }}
-      
+
       - name: Install dependencies
         run: |
           npm ci
           cd infrastructure && npm ci
-      
+
       - name: Create deployment backup
         run: |
           cd infrastructure
           npx cdk synth > backup-$(date +%Y%m%d-%H%M%S).yaml
-      
+
       - name: Deploy to Production
         run: |
           cd infrastructure
@@ -414,14 +414,14 @@ jobs:
         env:
           ENVIRONMENT: production
           JWT_SECRET: ${{ secrets.JWT_SECRET_PROD }}
-      
+
       - name: Run smoke tests
         run: npm run test:smoke || echo "Smoke tests not yet implemented"
         env:
           API_URL: https://api.your-domain.com
           TEST_USER_EMAIL: ${{ secrets.TEST_USER_EMAIL_PROD }}
           TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD_PROD }}
-      
+
       - name: Create GitHub Release
         if: success()
         uses: actions/create-release@v1
@@ -436,7 +436,7 @@ jobs:
             Deployed by: ${{ github.actor }}
           draft: false
           prerelease: false
-      
+
       - name: Notify deployment
         if: always()
         uses: 8398a7/action-slack@v3
@@ -444,7 +444,7 @@ jobs:
           status: ${{ job.status }}
           text: 'Production deployment ${{ job.status }}'
           webhook_url: ${{ secrets.SLACK_WEBHOOK }}
-      
+
       - name: Rollback on failure
         if: failure()
         run: |

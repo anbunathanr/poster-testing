@@ -1,9 +1,9 @@
 /**
  * Notification Message Formatter
- * 
+ *
  * Formats notification messages for test results to be sent via SNS.
  * Supports PASS and FAIL notifications with comprehensive metadata.
- * 
+ *
  * Requirements:
  * - 5.1: Format PASS notifications
  * - 5.2: Format FAIL notifications with error summary
@@ -40,15 +40,12 @@ export interface NotificationMetadata {
 /**
  * Task 9.4.1: Format PASS notification
  * Creates a success notification message with test metadata
- * 
+ *
  * @param testResult - The test result object
  * @param test - Optional test object for additional context
  * @returns Formatted notification message
  */
-export function formatPassNotification(
-  testResult: TestResult,
-  test?: Test
-): NotificationMessage {
+export function formatPassNotification(testResult: TestResult, test?: Test): NotificationMessage {
   const durationSeconds = (testResult.duration / 1000).toFixed(2);
   const timestamp = new Date(testResult.endTime).toISOString();
 
@@ -94,15 +91,12 @@ User ID: ${testResult.userId}
 /**
  * Task 9.4.2: Format FAIL notification with error summary
  * Creates a failure notification message with error details and test metadata
- * 
+ *
  * @param testResult - The test result object
  * @param test - Optional test object for additional context
  * @returns Formatted notification message
  */
-export function formatFailNotification(
-  testResult: TestResult,
-  test?: Test
-): NotificationMessage {
+export function formatFailNotification(testResult: TestResult, test?: Test): NotificationMessage {
   const durationSeconds = (testResult.duration / 1000).toFixed(2);
   const timestamp = new Date(testResult.endTime).toISOString();
   const errorSummary = testResult.errorMessage || 'Test execution failed';
@@ -155,15 +149,12 @@ User ID: ${testResult.userId}
 /**
  * Task 9.4.3: Format notification with complete test metadata
  * Main entry point for formatting notifications based on test result status
- * 
+ *
  * @param testResult - The test result object
  * @param test - Optional test object for additional context
  * @returns Formatted notification message
  */
-export function formatTestNotification(
-  testResult: TestResult,
-  test?: Test
-): NotificationMessage {
+export function formatTestNotification(testResult: TestResult, test?: Test): NotificationMessage {
   if (testResult.status === 'PASS') {
     return formatPassNotification(testResult, test);
   } else {
@@ -174,7 +165,7 @@ export function formatTestNotification(
 /**
  * Format notification message for SNS publishing
  * Converts NotificationMessage to SNS message format
- * 
+ *
  * @param notification - The notification message object
  * @returns SNS message structure
  */

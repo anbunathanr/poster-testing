@@ -1,6 +1,6 @@
 /**
  * Storage Lambda - Manages DynamoDB operations, S3 uploads, and presigned URL generation
- * 
+ *
  * This Lambda handles:
  * - S3 uploads for screenshots and logs
  * - DynamoDB operations for test results
@@ -735,7 +735,7 @@ async function handleQueryTestResults(
   try {
     // Extract query parameters
     const queryParams = event.queryStringParameters || {};
-    
+
     const startDate = queryParams.startDate ? parseInt(queryParams.startDate, 10) : undefined;
     const endDate = queryParams.endDate ? parseInt(queryParams.endDate, 10) : undefined;
     const status = queryParams.status as 'PASS' | 'FAIL' | undefined;
@@ -802,7 +802,7 @@ async function handleQueryTestResults(
 
 /**
  * Generates a presigned URL for an S3 object with tenant validation
- * 
+ *
  * @param s3Key - S3 object key
  * @param tenantId - Tenant identifier for validation
  * @returns Presigned URL
@@ -825,7 +825,6 @@ async function generatePresignedUrl(s3Key: string, tenantId: string): Promise<st
 
   return presignedUrl;
 }
-
 
 /**
  * Handles creating a new environment configuration

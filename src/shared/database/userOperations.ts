@@ -50,7 +50,7 @@ export interface CreateUserInput {
 
 /**
  * Creates a new user in the Users table
- * 
+ *
  * @param input - User creation data
  * @returns The created user
  * @throws Error if user creation fails or validation fails
@@ -99,14 +99,16 @@ export async function createUser(input: CreateUserInput): Promise<User> {
     await getDocClient().send(command);
     return user;
   } catch (error) {
-    throw new Error(`Failed to create user: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    throw new Error(
+      `Failed to create user: ${error instanceof Error ? error.message : 'Unknown error'}`
+    );
   }
 }
 
 /**
  * Retrieves a user by email address within a tenant
  * Uses the tenantId-email GSI for efficient lookup
- * 
+ *
  * @param email - User's email address
  * @param tenantId - Tenant identifier
  * @returns The user if found, null otherwise
@@ -133,20 +135,22 @@ export async function getUserByEmail(email: string, tenantId: string): Promise<U
 
   try {
     const response = await getDocClient().send(command);
-    
+
     if (!response.Items || response.Items.length === 0) {
       return null;
     }
 
     return response.Items[0] as User;
   } catch (error) {
-    throw new Error(`Failed to get user by email: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    throw new Error(
+      `Failed to get user by email: ${error instanceof Error ? error.message : 'Unknown error'}`
+    );
   }
 }
 
 /**
  * Retrieves a user by userId
- * 
+ *
  * @param userId - User identifier
  * @returns The user if found, null otherwise
  * @throws Error if query fails
@@ -166,21 +170,23 @@ export async function getUserById(userId: string): Promise<User | null> {
 
   try {
     const response = await getDocClient().send(command);
-    
+
     if (!response.Item) {
       return null;
     }
 
     return response.Item as User;
   } catch (error) {
-    throw new Error(`Failed to get user by ID: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    throw new Error(
+      `Failed to get user by ID: ${error instanceof Error ? error.message : 'Unknown error'}`
+    );
   }
 }
 
 /**
  * Associates a user with a tenant by updating the tenantId
  * This operation is used when moving a user to a different tenant
- * 
+ *
  * @param userId - User identifier
  * @param newTenantId - New tenant identifier
  * @returns The updated user
@@ -218,26 +224,31 @@ export async function associateUserWithTenant(userId: string, newTenantId: strin
 
   try {
     const response = await getDocClient().send(command);
-    
+
     if (!response.Attributes) {
       throw new Error('Failed to update user');
     }
 
     return response.Attributes as User;
   } catch (error) {
-    throw new Error(`Failed to associate user with tenant: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    throw new Error(
+      `Failed to associate user with tenant: ${error instanceof Error ? error.message : 'Unknown error'}`
+    );
   }
 }
 
 /**
  * Updates user status (ACTIVE/INACTIVE)
- * 
+ *
  * @param userId - User identifier
  * @param status - New status
  * @returns The updated user
  * @throws Error if user not found or update fails
  */
-export async function updateUserStatus(userId: string, status: 'ACTIVE' | 'INACTIVE'): Promise<User> {
+export async function updateUserStatus(
+  userId: string,
+  status: 'ACTIVE' | 'INACTIVE'
+): Promise<User> {
   // Validate input
   if (!userId || userId.trim() === '') {
     throw new Error('User ID is required');
@@ -272,13 +283,15 @@ export async function updateUserStatus(userId: string, status: 'ACTIVE' | 'INACT
 
   try {
     const response = await getDocClient().send(command);
-    
+
     if (!response.Attributes) {
       throw new Error('Failed to update user status');
     }
 
     return response.Attributes as User;
   } catch (error) {
-    throw new Error(`Failed to update user status: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    throw new Error(
+      `Failed to update user status: ${error instanceof Error ? error.message : 'Unknown error'}`
+    );
   }
 }

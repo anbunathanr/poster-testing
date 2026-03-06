@@ -1,6 +1,6 @@
 /**
  * Screenshot Capture Utility for Test Execution
- * 
+ *
  * This module provides utilities for capturing and managing screenshots
  * during Playwright test execution in AWS Lambda environment.
  * Screenshots are stored in /tmp directory (Lambda's writable directory)
@@ -63,7 +63,7 @@ export class ScreenshotCaptureManager {
 
   /**
    * Initialize screenshot capture manager
-   * 
+   *
    * @param testId - Test identifier
    * @param resultId - Test result identifier
    * @param tmpDir - Temporary directory for storing screenshots (defaults to /tmp)
@@ -77,7 +77,7 @@ export class ScreenshotCaptureManager {
   /**
    * Initialize the screenshot directory
    * Creates the directory structure in /tmp
-   * 
+   *
    * @throws Error if directory creation fails
    */
   async initialize(): Promise<void> {
@@ -94,7 +94,7 @@ export class ScreenshotCaptureManager {
   /**
    * Generate screenshot filename with metadata
    * Format: {stepNumber}-{stepAction}-{timestamp}-{type}.png
-   * 
+   *
    * @param metadata - Screenshot metadata
    * @returns Filename string
    */
@@ -106,7 +106,7 @@ export class ScreenshotCaptureManager {
 
   /**
    * Capture a screenshot during test execution
-   * 
+   *
    * @param page - Playwright page instance
    * @param metadata - Screenshot metadata
    * @param options - Screenshot capture options
@@ -135,7 +135,7 @@ export class ScreenshotCaptureManager {
       // Verify file was created and get size
       const stats = await fs.stat(filePath);
       const fileSizeKB = Math.round(stats.size / 1024);
-      
+
       console.log(`Screenshot captured successfully: ${fileName} (${fileSizeKB} KB)`);
 
       const result: ScreenshotResult = {
@@ -166,7 +166,7 @@ export class ScreenshotCaptureManager {
 
   /**
    * Capture a step screenshot (normal execution)
-   * 
+   *
    * @param page - Playwright page instance
    * @param stepNumber - Current step number
    * @param stepAction - Action being performed
@@ -193,7 +193,7 @@ export class ScreenshotCaptureManager {
 
   /**
    * Capture a failure screenshot (when test fails)
-   * 
+   *
    * @param page - Playwright page instance
    * @param stepNumber - Step number where failure occurred
    * @param stepAction - Action that failed
@@ -223,7 +223,7 @@ export class ScreenshotCaptureManager {
 
   /**
    * Capture a success screenshot (when test completes successfully)
-   * 
+   *
    * @param page - Playwright page instance
    * @param stepNumber - Final step number
    * @param options - Screenshot capture options
@@ -248,7 +248,7 @@ export class ScreenshotCaptureManager {
 
   /**
    * Get all captured screenshots
-   * 
+   *
    * @returns Array of screenshot results
    */
   getCapturedScreenshots(): ScreenshotResult[] {
@@ -257,34 +257,34 @@ export class ScreenshotCaptureManager {
 
   /**
    * Get successfully captured screenshots only
-   * 
+   *
    * @returns Array of successful screenshot results
    */
   getSuccessfulScreenshots(): ScreenshotResult[] {
-    return this.capturedScreenshots.filter(s => s.success);
+    return this.capturedScreenshots.filter((s) => s.success);
   }
 
   /**
    * Get failed screenshot captures
-   * 
+   *
    * @returns Array of failed screenshot results
    */
   getFailedScreenshots(): ScreenshotResult[] {
-    return this.capturedScreenshots.filter(s => !s.success);
+    return this.capturedScreenshots.filter((s) => !s.success);
   }
 
   /**
    * Get file paths of all successfully captured screenshots
-   * 
+   *
    * @returns Array of file paths
    */
   getScreenshotPaths(): string[] {
-    return this.getSuccessfulScreenshots().map(s => s.filePath);
+    return this.getSuccessfulScreenshots().map((s) => s.filePath);
   }
 
   /**
    * Get total size of all captured screenshots in bytes
-   * 
+   *
    * @returns Total size in bytes
    */
   async getTotalSize(): Promise<number> {
@@ -321,7 +321,7 @@ export class ScreenshotCaptureManager {
 
   /**
    * Get screenshot directory path
-   * 
+   *
    * @returns Directory path
    */
   getScreenshotDirectory(): string {
@@ -330,7 +330,7 @@ export class ScreenshotCaptureManager {
 
   /**
    * Get screenshot statistics
-   * 
+   *
    * @returns Statistics object
    */
   async getStatistics(): Promise<{
@@ -356,7 +356,7 @@ export class ScreenshotCaptureManager {
 
 /**
  * Utility function to create and initialize a screenshot manager
- * 
+ *
  * @param testId - Test identifier
  * @param resultId - Test result identifier
  * @param tmpDir - Temporary directory (defaults to /tmp)
@@ -375,7 +375,7 @@ export async function createScreenshotManager(
 /**
  * Utility function to safely capture a screenshot with error handling
  * Returns null if capture fails instead of throwing
- * 
+ *
  * @param page - Playwright page instance
  * @param manager - Screenshot capture manager
  * @param stepNumber - Current step number

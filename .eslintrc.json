@@ -41,5 +41,5 @@
     "es2022": true,
     "jest": true
   },
-  "ignorePatterns": ["dist", "node_modules", "*.js", "coverage"]
+  "ignorePatterns": ["dist", "node_modules", "*.js", "coverage", "infrastructure", "tests", "poster-testing"]
 }

@@ -1,6 +1,6 @@
 /**
  * Playwright Configuration for AWS Lambda
- * 
+ *
  * This module provides configuration and utilities for running Playwright
  * in AWS Lambda environment with headless Chromium browser.
  */
@@ -43,7 +43,7 @@ export class PlaywrightBrowserManager {
 
   /**
    * Launch a Chromium browser instance optimized for Lambda
-   * 
+   *
    * @param options - Browser launch options
    * @returns Browser instance
    * @throws Error if browser launch fails
@@ -78,7 +78,7 @@ export class PlaywrightBrowserManager {
 
   /**
    * Create a new browser context with specified options
-   * 
+   *
    * @param options - Browser launch options for viewport and user agent
    * @returns Browser context
    * @throws Error if browser is not launched or context creation fails
@@ -107,7 +107,7 @@ export class PlaywrightBrowserManager {
 
   /**
    * Create a new page in the browser context
-   * 
+   *
    * @param timeout - Default timeout for page operations (optional)
    * @returns Page instance
    * @throws Error if context is not created or page creation fails
@@ -136,7 +136,7 @@ export class PlaywrightBrowserManager {
 
   /**
    * Initialize browser with context and page in one call
-   * 
+   *
    * @param options - Browser launch options
    * @returns Object containing browser, context, and page
    * @throws Error if initialization fails
@@ -249,7 +249,7 @@ export class PlaywrightBrowserManager {
 
 /**
  * Utility function to create a browser manager with initialized browser
- * 
+ *
  * @param options - Browser launch options
  * @returns Initialized PlaywrightBrowserManager
  */
@@ -263,7 +263,7 @@ export async function createBrowserManager(
 
 /**
  * Utility function for quick browser operations with automatic cleanup
- * 
+ *
  * @param callback - Function to execute with the page
  * @param options - Browser launch options
  * @returns Result from the callback

@@ -136,11 +136,7 @@ export class BedrockClient {
       }
 
       const err = error as Error;
-      throw new BedrockError(
-        `Failed to invoke Bedrock model: ${err.message}`,
-        undefined,
-        err
-      );
+      throw new BedrockError(`Failed to invoke Bedrock model: ${err.message}`, undefined, err);
     }
   }
 
@@ -152,9 +148,7 @@ export class BedrockClient {
   private extractCompletion(responseBody: any): string {
     // Claude 3 models return content as an array of content blocks
     if (responseBody.content && Array.isArray(responseBody.content)) {
-      const textBlocks = responseBody.content.filter(
-        (block: any) => block.type === 'text'
-      );
+      const textBlocks = responseBody.content.filter((block: any) => block.type === 'text');
       if (textBlocks.length > 0) {
         return textBlocks.map((block: any) => block.text).join('');
       }

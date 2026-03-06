@@ -4,7 +4,10 @@
  */
 
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
-import { getTestGenerationService, TestGenerationError } from '../../shared/services/testGenerationService';
+import {
+  getTestGenerationService,
+  TestGenerationError,
+} from '../../shared/services/testGenerationService';
 import { createTest } from '../../shared/database/testOperations';
 import { getEnvironmentConfig } from '../../shared/database/environmentOperations';
 import { Environment, JWTPayload } from '../../shared/types';
@@ -59,7 +62,7 @@ interface GenerateTestRequest {
  */
 async function handleGenerateTest(event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
   const startTime = Date.now();
-  
+
   try {
     // Extract JWT context from authorizer
     const jwtContext = extractJWTContext(event);
@@ -128,8 +131,8 @@ async function handleGenerateTest(event: APIGatewayProxyEvent): Promise<APIGatew
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ 
-          error: `Invalid environment. Must be one of: ${validEnvironments.join(', ')}` 
+        body: JSON.stringify({
+          error: `Invalid environment. Must be one of: ${validEnvironments.join(', ')}`,
         }),
       };
     }
@@ -145,8 +148,8 @@ async function handleGenerateTest(event: APIGatewayProxyEvent): Promise<APIGatew
             headers: {
               'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ 
-              error: `Environment configuration not found for ${environment}` 
+            body: JSON.stringify({
+              error: `Environment configuration not found for ${environment}`,
             }),
           };
         }
@@ -165,7 +168,7 @@ async function handleGenerateTest(event: APIGatewayProxyEvent): Promise<APIGatew
     // Generate test script using TestGenerationService
     console.log('Generating test script for prompt:', testPrompt);
     const testGenerationService = getTestGenerationService();
-    
+
     let generationResult;
     try {
       generationResult = await testGenerationService.generateTest({
@@ -175,21 +178,21 @@ async function handleGenerateTest(event: APIGatewayProxyEvent): Promise<APIGatew
       });
     } catch (error) {
       console.error('Test generation failed:', error);
-      
+
       if (error instanceof TestGenerationError) {
         return {
           statusCode: 500,
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ 
+          body: JSON.stringify({
             error: error.message || 'Test generation failed',
             code: error.code,
             attempts: error.attempts,
           }),
         };
       }
-      
+
       throw error;
     }
 
@@ -265,7 +268,7 @@ function extractJWTContext(event: APIGatewayProxyEvent): JWTPayload | null {
   try {
     // API Gateway Lambda Authorizer adds context to requestContext.authorizer
     const authorizer = event.requestContext?.authorizer;
-    
+
     if (!authorizer || typeof authorizer !== 'object') {
       return null;
     }

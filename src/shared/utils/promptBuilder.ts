@@ -102,17 +102,14 @@ export function buildTestGenerationPrompt(input: PromptBuilderInput): string {
   const { testPrompt, environment, baseUrl, additionalContext } = input;
 
   // Build optional sections
-  const baseUrlSection = baseUrl
-    ? `**Base URL:** ${baseUrl}`
-    : '';
+  const baseUrlSection = baseUrl ? `**Base URL:** ${baseUrl}` : '';
 
   const additionalContextSection = additionalContext
     ? `\n**Additional Context:**\n${additionalContext}`
     : '';
 
   // Replace template placeholders
-  let prompt = TEST_GENERATION_TEMPLATE
-    .replace('{testPrompt}', testPrompt)
+  let prompt = TEST_GENERATION_TEMPLATE.replace('{testPrompt}', testPrompt)
     .replace('{environment}', environment)
     .replace('{baseUrlSection}', baseUrlSection)
     .replace('{additionalContextSection}', additionalContextSection);
@@ -132,21 +129,21 @@ export function buildTestGenerationPrompt(input: PromptBuilderInput): string {
 export function parseTestScriptResponse(response: string): TestScript {
   // Remove markdown code blocks if present
   let cleanedResponse = response.trim();
-  
+
   // Remove ```json and ``` markers
   cleanedResponse = cleanedResponse.replace(/^```json\s*/i, '');
   cleanedResponse = cleanedResponse.replace(/^```\s*/, '');
   cleanedResponse = cleanedResponse.replace(/\s*```$/, '');
-  
+
   // Trim again after removing markers
   cleanedResponse = cleanedResponse.trim();
 
   try {
     const parsed = JSON.parse(cleanedResponse);
-    
+
     // Validate the structure
     validateTestScript(parsed);
-    
+
     return parsed as TestScript;
   } catch (error) {
     const err = error as Error;

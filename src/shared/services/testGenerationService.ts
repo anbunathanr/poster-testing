@@ -79,10 +79,7 @@ export class TestGenerationService {
    * @param bedrockClient - Optional Bedrock client instance (creates default if not provided)
    * @param retryConfig - Optional retry configuration
    */
-  constructor(
-    bedrockClient?: BedrockClient,
-    retryConfig?: Partial<RetryConfig>
-  ) {
+  constructor(bedrockClient?: BedrockClient, retryConfig?: Partial<RetryConfig>) {
     this.bedrockClient = bedrockClient || getBedrockClient();
     this.retryConfig = { ...DEFAULT_RETRY_CONFIG, ...retryConfig };
   }
@@ -98,11 +95,7 @@ export class TestGenerationService {
 
     // Validate input
     if (!testPrompt || testPrompt.trim().length === 0) {
-      throw new TestGenerationError(
-        'Test prompt cannot be empty',
-        'INVALID_INPUT',
-        0
-      );
+      throw new TestGenerationError('Test prompt cannot be empty', 'INVALID_INPUT', 0);
     }
 
     // Build the prompt for Bedrock
@@ -115,7 +108,7 @@ export class TestGenerationService {
 
     // Invoke Bedrock with retry logic
     let lastError: Error | undefined;
-    
+
     for (let attempt = 1; attempt <= this.retryConfig.maxAttempts; attempt++) {
       try {
         const response = await this.bedrockClient.invoke({
@@ -215,9 +208,8 @@ export class TestGenerationService {
    */
   private calculateBackoffDelay(attempt: number): number {
     const delay =
-      this.retryConfig.initialDelayMs *
-      Math.pow(this.retryConfig.backoffMultiplier, attempt - 1);
-    
+      this.retryConfig.initialDelayMs * Math.pow(this.retryConfig.backoffMultiplier, attempt - 1);
+
     return Math.min(delay, this.retryConfig.maxDelayMs);
   }
 
@@ -235,10 +227,7 @@ export class TestGenerationService {
    * @param attempts - Number of attempts made
    * @returns TestGenerationError instance
    */
-  private createTestGenerationError(
-    error: unknown,
-    attempts: number
-  ): TestGenerationError {
+  private createTestGenerationError(error: unknown, attempts: number): TestGenerationError {
     const err = error as Error;
 
     // Determine error code based on error type
