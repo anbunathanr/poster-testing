@@ -1,0 +1,276 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: AI-Powered Automated Testing Platform - SAM Template for Local Development
+
+Globals:
+  Function:
+    Timeout: 30
+    Runtime: nodejs18.x
+    MemorySize: 512
+    Environment:
+      Variables:
+        NODE_ENV: local
+        USERS_TABLE: !Ref UsersTable
+        TESTS_TABLE: !Ref TestsTable
+        TEST_RESULTS_TABLE: !Ref TestResultsTable
+        ENVIRONMENTS_TABLE: !Ref EnvironmentsTable
+        EVIDENCE_BUCKET: !Ref EvidenceBucket
+        JWT_SECRET: local-dev-secret-change-in-production
+        JWT_EXPIRATION: 3600
+
+Resources:
+  # DynamoDB Tables
+  UsersTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: ai-testing-users-local
+      AttributeDefinitions:
+        - AttributeName: userId
+          AttributeType: S
+        - AttributeName: tenantId
+          AttributeType: S
+        - AttributeName: email
+          AttributeType: S
+      KeySchema:
+        - AttributeName: userId
+          KeyType: HASH
+      BillingMode: PAY_PER_REQUEST
+      GlobalSecondaryIndexes:
+        - IndexName: tenantId-email-index
+          KeySchema:
+            - AttributeName: tenantId
+              KeyType: HASH
+            - AttributeName: email
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+
+  TestsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: ai-testing-tests-local
+      AttributeDefinitions:
+        - AttributeName: tenantId
+          AttributeType: S
+        - AttributeName: testId
+          AttributeType: S
+        - AttributeName: userId
+          AttributeType: S
+        - AttributeName: createdAt
+          AttributeType: N
+      KeySchema:
+        - AttributeName: tenantId
+          KeyType: HASH
+        - AttributeName: testId
+          KeyType: RANGE
+      BillingMode: PAY_PER_REQUEST
+      GlobalSecondaryIndexes:
+        - IndexName: userId-createdAt-index
+          KeySchema:
+            - AttributeName: userId
+              KeyType: HASH
+            - AttributeName: createdAt
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+
+  TestResultsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: ai-testing-results-local
+      AttributeDefinitions:
+        - AttributeName: tenantId
+          AttributeType: S
+        - AttributeName: resultId
+          AttributeType: S
+        - AttributeName: testId
+          AttributeType: S
+        - AttributeName: startTime
+          AttributeType: N
+      KeySchema:
+        - AttributeName: tenantId
+          KeyType: HASH
+        - AttributeName: resultId
+          KeyType: RANGE
+      BillingMode: PAY_PER_REQUEST
+      GlobalSecondaryIndexes:
+        - IndexName: testId-startTime-index
+          KeySchema:
+            - AttributeName: testId
+              KeyType: HASH
+            - AttributeName: startTime
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+
+  EnvironmentsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: ai-testing-environments-local
+      AttributeDefinitions:
+        - AttributeName: tenantId
+          AttributeType: S
+        - AttributeName: environment
+          AttributeType: S
+      KeySchema:
+        - AttributeName: tenantId
+          KeyType: HASH
+        - AttributeName: environment
+          KeyType: RANGE
+      BillingMode: PAY_PER_REQUEST
+
+  # S3 Bucket
+  EvidenceBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: ai-testing-evidence-local
+
+  # Lambda Functions
+  AuthFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: dist/lambdas/auth/
+      Handler: index.handler
+      Description: User authentication and JWT management
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref UsersTable
+      Events:
+        Register:
+          Type: Api
+          Properties:
+            Path: /auth/register
+            Method: post
+        Login:
+          Type: Api
+          Properties:
+            Path: /auth/login
+            Method: post
+
+  AuthorizerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: dist/lambdas/authorizer/
+      Handler: index.handler
+      Description: JWT token validation for API Gateway
+      Timeout: 10
+      MemorySize: 256
+
+  TestGenerationFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: dist/lambdas/test-generation/
+      Handler: index.handler
+      Description: AI-powered test generation with Amazon Bedrock
+      Timeout: 60
+      MemorySize: 1024
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref TestsTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref EnvironmentsTable
+        - Statement:
+            - Effect: Allow
+              Action:
+                - bedrock:InvokeModel
+              Resource: '*'
+      Events:
+        GenerateTest:
+          Type: Api
+          Properties:
+            Path: /tests/generate
+            Method: post
+
+  TestExecutionFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: dist/lambdas/test-execution/
+      Handler: index.handler
+      Description: Playwright-based test execution
+      Timeout: 300
+      MemorySize: 2048
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref TestsTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref TestResultsTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref EnvironmentsTable
+        - S3CrudPolicy:
+            BucketName: !Ref EvidenceBucket
+      Events:
+        ExecuteTest:
+          Type: Api
+          Properties:
+            Path: /tests/{testId}/execute
+            Method: post
+
+  StorageFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: dist/lambdas/storage/
+      Handler: index.handler
+      Description: DynamoDB and S3 storage management
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref TestsTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref TestResultsTable
+        - S3CrudPolicy:
+            BucketName: !Ref EvidenceBucket
+      Events:
+        GetResult:
+          Type: Api
+          Properties:
+            Path: /tests/{testId}/results/{resultId}
+            Method: get
+        ListResults:
+          Type: Api
+          Properties:
+            Path: /tests/results
+            Method: get
+
+  ReportFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: dist/lambdas/report/
+      Handler: index.handler
+      Description: Test report generation
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref TestsTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref TestResultsTable
+        - S3ReadPolicy:
+            BucketName: !Ref EvidenceBucket
+      Events:
+        GetReport:
+          Type: Api
+          Properties:
+            Path: /reports/{resultId}
+            Method: get
+
+Outputs:
+  ApiEndpoint:
+    Description: API Gateway endpoint URL for local development
+    Value: !Sub 'https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/'
+  
+  UsersTableName:
+    Description: DynamoDB Users table name
+    Value: !Ref UsersTable
+  
+  TestsTableName:
+    Description: DynamoDB Tests table name
+    Value: !Ref TestsTable
+  
+  TestResultsTableName:
+    Description: DynamoDB Test Results table name
+    Value: !Ref TestResultsTable
+  
+  EnvironmentsTableName:
+    Description: DynamoDB Environments table name
+    Value: !Ref EnvironmentsTable
+  
+  EvidenceBucketName:
+    Description: S3 Evidence bucket name
+    Value: !Ref EvidenceBucket

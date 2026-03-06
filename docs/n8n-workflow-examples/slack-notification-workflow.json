@@ -1,0 +1,293 @@
+{
+  "name": "AI Testing Platform - Slack Notifications",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "test-notifications",
+        "responseMode": "onReceived",
+        "responseCode": 200
+      },
+      "id": "webhook-node",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.Type }}",
+              "operation": "equal",
+              "value2": "SubscriptionConfirmation"
+            }
+          ]
+        }
+      },
+      "id": "if-subscription",
+      "name": "Is Subscription Confirmation?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $json.SubscribeURL }}"
+      },
+      "id": "confirm-subscription",
+      "name": "Confirm Subscription",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [650, 200]
+    },
+    {
+      "parameters": {
+        "jsCode": "const snsMessage = JSON.parse($input.item.json.Message);\n\nreturn {\n  json: {\n    resultId: snsMessage.resultId,\n    testId: snsMessage.testId,\n    status: snsMessage.status,\n    duration: snsMessage.duration,\n    tenantId: snsMessage.tenantId,\n    userId: snsMessage.userId,\n    testName: snsMessage.testName,\n    timestamp: snsMessage.timestamp,\n    errorMessage: snsMessage.errorMessage || null,\n    durationSeconds: Math.round(snsMessage.duration / 1000),\n    timestampFormatted: new Date(snsMessage.timestamp).toISOString(),\n    statusEmoji: snsMessage.status === 'PASS' ? '✅' : '❌',\n    statusColor: snsMessage.status === 'PASS' ? 'good' : 'danger'\n  }\n};"
+      },
+      "id": "parse-message",
+      "name": "Parse SNS Message",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [650, 400]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.status }}",
+              "operation": "equal",
+              "value2": "PASS"
+            }
+          ]
+        }
+      },
+      "id": "if-success",
+      "name": "Is Success?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [850, 400]
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "C1234567890",
+          "mode": "list",
+          "cachedResultName": "#test-results"
+        },
+        "text": "=✅ Test Passed: {{ $json.testName }}",
+        "otherOptions": {
+          "includeLinkToWorkflow": false
+        },
+        "blocksUi": {
+          "blocksValues": [
+            {
+              "block": {
+                "type": "section",
+                "text": {
+                  "type": "mrkdwn",
+                  "text": "=*✅ Test Execution Passed*\\n\\n*Test:* {{ $json.testName }}\\n*Duration:* {{ $json.durationSeconds }} seconds\\n*Timestamp:* {{ $json.timestampFormatted }}"
+                }
+              }
+            },
+            {
+              "block": {
+                "type": "section",
+                "fields": [
+                  {
+                    "type": "mrkdwn",
+                    "text": "=*Test ID:*\\n{{ $json.testId }}"
+                  },
+                  {
+                    "type": "mrkdwn",
+                    "text": "=*Result ID:*\\n{{ $json.resultId }}"
+                  }
+                ]
+              }
+            },
+            {
+              "block": {
+                "type": "actions",
+                "elements": [
+                  {
+                    "type": "button",
+                    "text": {
+                      "type": "plain_text",
+                      "text": "View Results"
+                    },
+                    "url": "=https://platform.example.com/results/{{ $json.resultId }}"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "id": "slack-success",
+      "name": "Slack - Success",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.1,
+      "position": [1050, 300],
+      "credentials": {
+        "slackOAuth2Api": {
+          "id": "1",
+          "name": "Slack account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "C1234567890",
+          "mode": "list",
+          "cachedResultName": "#test-results"
+        },
+        "text": "=❌ Test Failed: {{ $json.testName }}",
+        "otherOptions": {
+          "includeLinkToWorkflow": false
+        },
+        "blocksUi": {
+          "blocksValues": [
+            {
+              "block": {
+                "type": "section",
+                "text": {
+                  "type": "mrkdwn",
+                  "text": "=*❌ Test Execution Failed*\\n\\n*Test:* {{ $json.testName }}\\n*Duration:* {{ $json.durationSeconds }} seconds\\n*Timestamp:* {{ $json.timestampFormatted }}"
+                }
+              }
+            },
+            {
+              "block": {
+                "type": "section",
+                "fields": [
+                  {
+                    "type": "mrkdwn",
+                    "text": "=*Test ID:*\\n{{ $json.testId }}"
+                  },
+                  {
+                    "type": "mrkdwn",
+                    "text": "=*Result ID:*\\n{{ $json.resultId }}"
+                  }
+                ]
+              }
+            },
+            {
+              "block": {
+                "type": "section",
+                "text": {
+                  "type": "mrkdwn",
+                  "text": "=*Error:*\\n```{{ $json.errorMessage }}```"
+                }
+              }
+            },
+            {
+              "block": {
+                "type": "actions",
+                "elements": [
+                  {
+                    "type": "button",
+                    "text": {
+                      "type": "plain_text",
+                      "text": "View Results"
+                    },
+                    "url": "=https://platform.example.com/results/{{ $json.resultId }}",
+                    "style": "danger"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "id": "slack-failure",
+      "name": "Slack - Failure",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.1,
+      "position": [1050, 500],
+      "credentials": {
+        "slackOAuth2Api": {
+          "id": "1",
+          "name": "Slack account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Is Subscription Confirmation?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Subscription Confirmation?": {
+      "main": [
+        [
+          {
+            "node": "Confirm Subscription",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Parse SNS Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse SNS Message": {
+      "main": [
+        [
+          {
+            "node": "Is Success?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Success?": {
+      "main": [
+        [
+          {
+            "node": "Slack - Success",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Slack - Failure",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 0,
+  "updatedAt": "2024-02-12T00:00:00.000Z",
+  "versionId": "1"
+}

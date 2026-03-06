@@ -1,0 +1,14 @@
+{
+  "body": "{\"email\":\"test@example.com\",\"password\":\"SecurePass123!\"}",
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "httpMethod": "POST",
+  "path": "/auth/login",
+  "requestContext": {
+    "requestId": "local-test-request-id",
+    "identity": {
+      "sourceIp": "127.0.0.1"
+    }
+  }
+}

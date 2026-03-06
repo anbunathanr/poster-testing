@@ -1,0 +1,166 @@
+{
+  "name": "AI Testing Platform - Basic Notifications",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "test-notifications",
+        "responseMode": "onReceived",
+        "responseCode": 200,
+        "options": {}
+      },
+      "id": "webhook-node",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "webhookId": "test-notifications"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.Type }}",
+              "operation": "equal",
+              "value2": "SubscriptionConfirmation"
+            }
+          ]
+        }
+      },
+      "id": "if-subscription",
+      "name": "Is Subscription Confirmation?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $json.SubscribeURL }}",
+        "options": {}
+      },
+      "id": "confirm-subscription",
+      "name": "Confirm Subscription",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [650, 200]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse the SNS message\nconst snsMessage = JSON.parse($input.item.json.Message);\n\n// Extract and format the data\nreturn {\n  json: {\n    resultId: snsMessage.resultId,\n    testId: snsMessage.testId,\n    status: snsMessage.status,\n    duration: snsMessage.duration,\n    tenantId: snsMessage.tenantId,\n    userId: snsMessage.userId,\n    testName: snsMessage.testName,\n    timestamp: snsMessage.timestamp,\n    errorMessage: snsMessage.errorMessage || null,\n    // Calculated fields\n    durationSeconds: Math.round(snsMessage.duration / 1000),\n    timestampFormatted: new Date(snsMessage.timestamp).toISOString(),\n    statusEmoji: snsMessage.status === 'PASS' ? '✅' : '❌',\n    statusColor: snsMessage.status === 'PASS' ? 'good' : 'danger'\n  }\n};"
+      },
+      "id": "parse-message",
+      "name": "Parse SNS Message",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [650, 400]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.status }}",
+              "operation": "equal",
+              "value2": "PASS"
+            }
+          ]
+        }
+      },
+      "id": "if-success",
+      "name": "Is Success?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [850, 400]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Log success notification\nconsole.log('Test Passed:', {\n  testId: $json.testId,\n  testName: $json.testName,\n  duration: $json.durationSeconds + 's'\n});\n\nreturn { json: $json };"
+      },
+      "id": "log-success",
+      "name": "Log Success",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1050, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Log failure notification\nconsole.log('Test Failed:', {\n  testId: $json.testId,\n  testName: $json.testName,\n  duration: $json.durationSeconds + 's',\n  error: $json.errorMessage\n});\n\nreturn { json: $json };"
+      },
+      "id": "log-failure",
+      "name": "Log Failure",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1050, 500]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Is Subscription Confirmation?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Subscription Confirmation?": {
+      "main": [
+        [
+          {
+            "node": "Confirm Subscription",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Parse SNS Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse SNS Message": {
+      "main": [
+        [
+          {
+            "node": "Is Success?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Success?": {
+      "main": [
+        [
+          {
+            "node": "Log Success",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log Failure",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 0,
+  "updatedAt": "2024-02-12T00:00:00.000Z",
+  "versionId": "1"
+}

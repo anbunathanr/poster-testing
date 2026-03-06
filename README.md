@@ -46,23 +46,44 @@ The platform uses a serverless microservices architecture on AWS:
 .
 ├── src/
 │   ├── lambdas/
-│   │   ├── auth/
-│   │   ├── test-generation/
-│   │   ├── test-execution/
-│   │   ├── storage/
-│   │   └── reports/
-│   ├── shared/
-│   │   ├── models/
-│   │   ├── utils/
-│   │   └── types/
-│   └── infrastructure/
+│   │   ├── auth/              # Authentication Lambda
+│   │   ├── authorizer/        # JWT authorizer Lambda
+│   │   ├── testgen/           # Test generation Lambda
+│   │   ├── testexec/          # Test execution Lambda
+│   │   ├── storage/           # Storage management Lambda
+│   │   └── report/            # Report generation Lambda
+│   └── shared/
+│       ├── config/            # Configuration management
+│       ├── types/             # TypeScript type definitions
+│       └── utils/             # Shared utilities
+├── infrastructure/            # AWS CDK infrastructure code
+│   ├── bin/
+│   │   └── app.ts            # CDK app entry point
+│   ├── lib/
+│   │   ├── ai-testing-platform-stack.ts  # Main stack
+│   │   └── stacks/           # Individual resource stacks
+│   │       ├── dynamodb-stack.ts
+│   │       ├── s3-stack.ts
+│   │       ├── lambda-stack.ts
+│   │       ├── api-gateway-stack.ts
+│   │       ├── notification-stack.ts
+│   │       └── monitoring-stack.ts
+│   └── test/                 # Infrastructure tests
 ├── tests/
-│   ├── unit/
-│   ├── integration/
-│   └── e2e/
-├── layers/
-│   └── playwright/
-└── docs/
+│   ├── unit/                 # Unit tests
+│   ├── integration/          # Integration tests
+│   └── e2e/                  # End-to-end tests
+├── events/                   # SAM local test events
+├── scripts/                  # Setup and utility scripts
+├── config/                   # Environment configurations
+├── docs/                     # Documentation
+│   ├── LOCAL_DEV_QUICKSTART.md
+│   ├── SAM_LOCAL_DEVELOPMENT.md
+│   ├── INFRASTRUCTURE_DEPLOYMENT.md
+│   └── TESTING_SETUP.md
+├── template.yaml             # AWS SAM template
+├── docker-compose.yml        # Local services (DynamoDB, S3)
+└── env.json                  # Local environment variables
 ```
 
 ## Getting Started
@@ -88,6 +109,52 @@ npm install
 cp .env.example .env
 # Edit .env with your AWS credentials and configuration
 ```
+
+### Infrastructure Deployment
+
+The platform uses AWS CDK for infrastructure as code. See [Infrastructure Deployment Guide](docs/INFRASTRUCTURE_DEPLOYMENT.md) for detailed instructions.
+
+**Important**: Before deploying, you must build the Playwright Lambda Layer. See [Playwright Layer Setup](docs/PLAYWRIGHT_LAYER_SETUP.md).
+
+Quick start:
+
+```bash
+# Install AWS CDK globally
+npm install -g aws-cdk
+
+# Build the Playwright Lambda Layer (required for test execution)
+cd layers/playwright
+chmod +x build-layer.sh
+./build-layer.sh
+cd ../..
+
+# Bootstrap CDK (one-time per account/region)
+cdk bootstrap aws://ACCOUNT-ID/REGION
+
+# Build Lambda code
+npm run build
+
+# Deploy to development environment
+npm run cdk:deploy:dev
+```
+
+After deployment, note the API endpoint URL from the CDK outputs.
+
+### Local Development with AWS SAM
+
+For local development and testing without deploying to AWS:
+
+```bash
+# Quick setup (starts local services and creates tables)
+npm run local:setup
+
+# Start local API Gateway
+npm run local:dev
+```
+
+The local API will be available at `http://127.0.0.1:3000`.
+
+See the [Local Development Quick Start Guide](docs/LOCAL_DEV_QUICKSTART.md) for detailed instructions.
 
 ### Development
 
@@ -166,18 +233,80 @@ npm run test:coverage
 
 ## Deployment
 
-The platform supports three environments:
+The platform supports three environments with AWS CDK:
 
 - **Dev**: Development and testing
 - **Staging**: Pre-production validation
 - **Production**: Live customer environment
 
+### Deploy Infrastructure
+
 ```bash
-# Deploy to specific environment
-npm run deploy:dev
-npm run deploy:staging
-npm run deploy:prod
+# Development
+npm run cdk:deploy:dev
+
+# Staging
+npm run cdk:deploy:staging
+
+# Production (requires approval)
+npm run cdk:deploy:prod
 ```
+
+### Deploy with Email Notifications
+
+```bash
+cd infrastructure
+cdk deploy \
+  --context environment=dev \
+  --context notificationEmail=your-email@example.com \
+  --context alarmEmail=admin@example.com
+```
+
+### View Infrastructure Changes
+
+```bash
+npm run cdk:diff
+```
+
+### Destroy Environment
+
+```bash
+npm run cdk:destroy:dev
+```
+
+For detailed deployment instructions, see [Infrastructure Deployment Guide](docs/INFRASTRUCTURE_DEPLOYMENT.md).
+
+## Documentation
+
+### Setup Guides
+
+- [Infrastructure Deployment](docs/INFRASTRUCTURE_DEPLOYMENT.md) - Complete CDK deployment guide
+- [AWS Setup Guide](docs/AWS_SETUP_GUIDE.md) - Initial AWS account configuration
+- [Local Development Quick Start](docs/LOCAL_DEV_QUICKSTART.md) - Get started with local development
+- [SAM Local Development](docs/SAM_LOCAL_DEVELOPMENT.md) - Detailed SAM local setup
+
+### Component Setup
+
+- [DynamoDB Setup](docs/DYNAMODB_SETUP.md) - Database table configuration
+- [S3 Setup](docs/S3_SETUP.md) - Storage bucket configuration
+- [API Gateway Setup](docs/API_GATEWAY_SETUP.md) - API configuration
+- [CloudWatch Setup](docs/CLOUDWATCH_SETUP.md) - Monitoring and logging
+- [Secrets Manager Setup](docs/SECRETS_MANAGER_SETUP.md) - Secrets configuration
+- [Encryption Setup](docs/ENCRYPTION_SETUP.md) - Data encryption configuration
+- [Playwright Layer Setup](docs/PLAYWRIGHT_LAYER_SETUP.md) - Playwright Lambda layer
+
+### Notification Setup
+
+- [SNS Email Subscription Quick Start](docs/SNS_EMAIL_SUBSCRIPTION_QUICKSTART.md) - **Quick guide to configure email notifications**
+- [SNS Notification Setup](docs/SNS_NOTIFICATION_SETUP.md) - Comprehensive notification configuration guide
+- [n8n Integration Quick Start](docs/N8N_QUICKSTART.md) - **Quick guide to integrate n8n webhooks (5 minutes)**
+- [n8n Webhook Setup](docs/N8N_WEBHOOK_SETUP.md) - Comprehensive n8n webhook integration guide
+- [n8n Workflow Examples](docs/n8n-workflow-examples/) - Ready-to-use n8n workflow templates
+
+### Architecture
+
+- [Project Structure](docs/PROJECT_STRUCTURE.md) - Codebase organization
+- [Testing Setup](docs/TESTING_SETUP.md) - Testing framework and guidelines
 
 ## Contributing
 

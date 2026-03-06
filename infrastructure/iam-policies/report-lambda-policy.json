@@ -1,0 +1,41 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "CloudWatchLogs",
+      "Effect": "Allow",
+      "Action": [
+        "logs:CreateLogGroup",
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+      ],
+      "Resource": "arn:aws:logs:*:*:log-group:/aws/lambda/ai-testing-report-*"
+    },
+    {
+      "Sid": "DynamoDBReadOnly",
+      "Effect": "Allow",
+      "Action": [
+        "dynamodb:GetItem",
+        "dynamodb:Query",
+        "dynamodb:Scan"
+      ],
+      "Resource": [
+        "arn:aws:dynamodb:*:*:table/ai-testing-tests",
+        "arn:aws:dynamodb:*:*:table/ai-testing-test-results",
+        "arn:aws:dynamodb:*:*:table/ai-testing-test-results/index/*"
+      ]
+    },
+    {
+      "Sid": "S3ReadOnly",
+      "Effect": "Allow",
+      "Action": [
+        "s3:GetObject",
+        "s3:ListBucket"
+      ],
+      "Resource": [
+        "arn:aws:s3:::ai-testing-platform-evidence",
+        "arn:aws:s3:::ai-testing-platform-evidence/*"
+      ]
+    }
+  ]
+}

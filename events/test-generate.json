@@ -1,0 +1,20 @@
+{
+  "body": "{\"testPrompt\":\"Test login functionality with valid credentials and verify dashboard loads\",\"environment\":\"DEV\"}",
+  "headers": {
+    "Content-Type": "application/json",
+    "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJ1c2VyLTEyMyIsInRlbmFudElkIjoidGVuYW50LTEyMyIsImVtYWlsIjoidGVzdEBleGFtcGxlLmNvbSIsImlhdCI6MTcwNzc1MzYwMCwiZXhwIjoxNzA3NzU3MjAwfQ.test-signature"
+  },
+  "httpMethod": "POST",
+  "path": "/tests/generate",
+  "requestContext": {
+    "requestId": "local-test-request-id",
+    "authorizer": {
+      "userId": "user-123",
+      "tenantId": "tenant-123",
+      "email": "test@example.com"
+    },
+    "identity": {
+      "sourceIp": "127.0.0.1"
+    }
+  }
+}
